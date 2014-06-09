@@ -27,9 +27,7 @@ class Histogram
         ~Histogram();
 };
 
-
-
-
-
+// histogram pretty print overloading
+std::ostream& operator<<(std::ostream &strm, const Histogram &hist);
 
 #endif

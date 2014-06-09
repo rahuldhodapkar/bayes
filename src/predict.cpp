@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "histogram.h"
-
+#include "datagen.h"
 
 /* ==== predict.cpp ====
  * this is the main module of a small C++ program written to implement
@@ -14,8 +14,6 @@
  * @version 6.9.2014
  */
 
-using namespace std;
-
 // histogram to be stored as globals for exploration
 
 Histogram colData;
@@ -23,17 +21,9 @@ Histogram colData;
 
 
 // allocates memory for and initializes global histogram
-void buildHistogram() 
+void initHistogram() 
 {
-
-
-}
-
-// frees memory for global histogram
-void destroyHistogram()
-{
-
-
+    
 
 }
 
@@ -66,7 +56,24 @@ void update (Histogram data)
 // runs the predefined test script
 int main(int argc, char ** argv) 
 {
-    cout << "helloworld" << endl;
+    Histogram ts (4); 
+    for(int i = 0; i < 4; i++) {
+        ts.values[i] = i;
+        ts.bounds[i].start = i;
+        ts.bounds[i].end = i + 1;
+    }
+    std::cout << "helloworld" << std::endl;
+    std::cout << "================================" << std::endl;
+    std::cout << ts << std::endl;
+
+    DataStream stream (std::string("../data/ts.in"));
+    if(stream.hasNextBlock()) {
+        stream.getNextBlock(&ts);
+    }
+
+    std::cout << "================================" << std::endl;
+    std::cout << ts << std::endl;
+
     return 0;
 }
 

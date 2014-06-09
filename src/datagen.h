@@ -2,29 +2,29 @@
 #define DATAGEN_H 1
 
 #include <iostream>
+#include <fstream>
 #include "histogram.h"
-
-using namespace std;
 
 /* ==== datagen.h ====
  * simulator for input of selection data from running query engine.
  * will return batch data about query execution (selectivity and cost
  * of operators) while the query engine is running.
  *
+ * @author Rahul Dhodapkar (krishnakid)
+ * @version 6.9.2014
  */
 
 class DataStream 
 {
-    FILE* channel;
+    std::ifstream channel;
     int batchSize;
 
     public:
-        DataStream(char* filename, int btSize=10);
+        DataStream(std::string filename, int btSize=10);
         ~DataStream();
         bool hasNextBlock();
-        Histogram* getNextBlock();
-
-}
+        void getNextBlock(Histogram* out);
+};
 
 
 #endif
