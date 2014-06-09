@@ -11,8 +11,8 @@
 
 // define BucketBound structure
 typedef struct {
-    int start;
-    int end;
+    double low;
+    double high;
 } BucketBound;
 
 // define Histogram class wrapper
@@ -20,7 +20,7 @@ class Histogram
 { 
     public:
         int nBuckets;
-        unsigned long* values;
+        double* values;
         BucketBound* bounds;
 
         Histogram(int size=10);

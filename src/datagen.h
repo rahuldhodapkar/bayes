@@ -14,6 +14,14 @@
  * @version 6.9.2014
  */
 
+
+class RangeSummary{
+    public:
+        double low;
+        double high;
+        int nReturned;
+};
+
 class DataStream 
 {
     std::ifstream channel;
@@ -23,8 +31,9 @@ class DataStream
         DataStream(std::string filename, int btSize=10);
         ~DataStream();
         bool hasNextBlock();
-        void getNextBlock(Histogram* out);
+        void getNextBlock(RangeSummary* out);
 };
 
+std::ostream& operator<<(std::ostream &strm, const RangeSummary &summ);
 
 #endif

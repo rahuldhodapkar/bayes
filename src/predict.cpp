@@ -16,9 +16,10 @@
 
 // histogram to be stored as globals for exploration
 
-Histogram colData;
 
+double _alpha = 0.45;               // universal damping term
 
+Histogram hist;
 
 // allocates memory for and initializes global histogram
 void initHistogram() 
@@ -44,13 +45,39 @@ int split ()
 void restructure ()
 {
     // checks threshold conditions and does stuff.
+
 }
 
 
 // recalibrates histogram based on batch input
-void update (Histogram data)
+void update (RangeSummary data)
 {
-    // incomplete function
+    // estimate the result size of the selection using current data
+    double est = 0;
+    double upFracs [hist.nBuckets];
+
+    for (int i = 0; i < hist.nBuckets; i++) {
+        double minIntersect = std::max(data.low, hist.bounds[i].low);
+        double maxIntersect = std::min(data.high, hist.bounds[i].high);
+        
+        double frac = std::max(0.0, (maxIntersect - minIntersect) / 
+                               (hist.bounds[i].high - hist.bounds[i].low));
+        
+        upFracs[i] = (maxIntersect - minIntersect + 1) / 
+                            (hist.bounds[i].high - hist.bounds[i].low + 1);
+                            
+        est += frac * hist.values[i];
+    }
+    // compute absolute estimation error
+    double esterr = data.nReturned - est;              // error term
+
+    // distribute error amongst buckets in proportion to frequency
+    for (int i = 0; i < hist.nBuckets; i++) {       
+        hist.values[i] = std::max((hist.values[i] + _alpha * esterr *
+                                    upFracs[i] * hist.values[i] / est),
+                             0.0);
+    }
+
 }
 
 // runs the predefined test script
@@ -59,22 +86,36 @@ int main(int argc, char ** argv)
     Histogram ts (4); 
     for(int i = 0; i < 4; i++) {
         ts.values[i] = i;
-        ts.bounds[i].start = i;
-        ts.bounds[i].end = i + 1;
+        ts.bounds[i].low = i;
+        ts.bounds[i].high = i + 1;
     }
     std::cout << "helloworld" << std::endl;
     std::cout << "================================" << std::endl;
     std::cout << ts << std::endl;
 
     DataStream stream (std::string("../data/ts.in"));
+    RangeSummary sum ;
+
     if(stream.hasNextBlock()) {
-        stream.getNextBlock(&ts);
+        stream.getNextBlock(&sum);
     }
+    std::cout << sum << std::endl;
 
     std::cout << "================================" << std::endl;
     std::cout << ts << std::endl;
 
     return 0;
 }
+
+
+
+
+
+
+
+
+
+
+
 
 

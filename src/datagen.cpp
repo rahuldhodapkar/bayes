@@ -3,6 +3,7 @@
 #include <string>
 #include <fstream>
 #include <iostream>
+#include <assert.h>
 
 #include "histogram.h"
 #include "datagen.h"
@@ -33,20 +34,24 @@ bool DataStream::hasNextBlock()
 
 // loads the next block of statistical data into
 // the histogram pointer specified by "out"
-void DataStream::getNextBlock(Histogram* out)
+void DataStream::getNextBlock(RangeSummary* out)
 {
-    int nBuckets = out->nBuckets;
-    // ugly, but will be replaced when hooked into query execution
-    for(int i = 0; i < nBuckets && hasNextBlock(); i++) {
-        std::string sSt, sEnd, sVal;
-        std::getline(channel, sSt, ',');
-        std::getline(channel, sEnd, ',');
-        std::getline(channel, sVal);
+    assert(hasNextBlock() && "tried to access dead datastream");
 
-        out->bounds[i].start = std::stod(sSt);
-        out->bounds[i].end = std::stoi(sEnd);
-        out->values[i] = std::stoi(sVal);
-    } 
+    // ugly, but will be replaced when hooked into query execution
+    std::string sSt, sEnd, sVal;
+    std::getline(channel, sSt, ',');
+    std::getline(channel, sEnd, ',');
+    std::getline(channel, sVal);
+
+    out->low = std::stod(sSt);
+    out->high = std::stod(sEnd);
+    out->nReturned = std::stoi(sVal);
 }
 
+// implementation for pretty printing RangeSummary object class
+std::ostream& operator<<(std::ostream &strm, const RangeSummary &summ) {
+    return strm << "( " << summ.low << ", " << summ.high << " )" <<
+                    " ::= " << summ.nReturned; 
+}
 
