@@ -2,6 +2,8 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include "histogram.h"
+
 
 /* ==== predict.cpp ====
  * this is the main module of a small C++ program written to implement
@@ -13,7 +15,6 @@
  */
 
 using namespace std;
-typedef unsigned long* Histogram;
 
 // histogram to be stored as globals for exploration
 
@@ -57,9 +58,9 @@ void restructure ()
 
 
 // recalibrates histogram based on batch input
-void calibrate (Histogram data)
+void update (Histogram data)
 {
-    return 1;       // incomplete function
+    // incomplete function
 }
 
 // runs the predefined test script

@@ -1,5 +1,5 @@
 #ifndef HISTOGRAM_H             // HEADER GUARD
-#define HISTOGRAM_H
+#define HISTOGRAM_H 1
 
 #include <iostream> 
 
@@ -9,20 +9,23 @@
  * the ranges in a vector of int pairs.
  */
 
+// define BucketBound structure
+typedef struct {
+    int start;
+    int end;
+} BucketBound;
+
+// define Histogram class wrapper
 class Histogram 
 { 
-    typedef struct {
-        int start;
-        int end;
-    } BucketBound;
-    unsigned long* values;
-    BucketBound* bounds;
-}
+    public:
+        int nBuckets;
+        unsigned long* values;
+        BucketBound* bounds;
 
-
-
-
-
+        Histogram(int size=10);
+        ~Histogram();
+};
 
 
 

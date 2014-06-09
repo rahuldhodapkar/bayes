@@ -19,27 +19,12 @@ class DataStream
     int batchSize;
 
     public:
-        int openStream(char* filename);
+        DataStream(char* filename, int btSize=10);
+        ~DataStream();
         bool hasNextBlock();
         Histogram* getNextBlock();
 
 }
-
-
-
-
-
-
-
-
-
-/* Opens a channel for batch data read.
- *
- *
- *
- */
-
-
 
 
 #endif
