@@ -19,7 +19,7 @@ class RangeSummary{
     public:
         double low;
         double high;
-        int nReturned;
+        double nReturned;
 };
 
 class DataStream 

@@ -46,7 +46,7 @@ void DataStream::getNextBlock(RangeSummary* out)
 
     out->low = std::stod(sSt);
     out->high = std::stod(sEnd);
-    out->nReturned = std::stoi(sVal);
+    out->nReturned = std::stod(sVal);
 }
 
 // implementation for pretty printing RangeSummary object class
