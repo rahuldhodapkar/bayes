@@ -1,6 +1,9 @@
 # Compiled Binary
 /src/predict
 
+# Built Input Files
+*.in
+
 # Text Editor artifacts
 *.swp
 *.swo
