@@ -8,11 +8,27 @@
 # @version 6.10.2014
 
 
-truth <- c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);      # define truth
-nSamples <- 50;                                 # number of samples
+# build a ground truth histogram
 
-lbnd <- sample(1:10, nSamples, replace=TRUE);   # can be extended to runif
-rbnd <- sample(1:10, nSamples, replace=TRUE);
+nSamples <- 5000;
+nBins <- 100;
+
+
+
+vals = rnorm(nSamples, mean=50, sd=10);
+# vals = rbinom(nSamples, size=40, prob=0.2);
+
+vals = floor(vals);
+vals = vals[vals > 0];
+vals = vals[vals <= nBins];
+truth = matrix(0, 1, nBins);
+
+for (val in vals) {
+    truth[val] <- truth[val] + 1;
+}
+
+lbnd <- sample(1:nBins, nSamples, replace=TRUE); # can be extended to runif
+rbnd <- sample(1:nBins, nSamples, replace=TRUE);
 
 ranges <- matrix(, nSamples, 3); 
 
@@ -26,4 +42,5 @@ for (i in 1:nSamples) {
 write.table(ranges, "../../data/gen.in", sep=",", 
             row.names=FALSE, col.names=FALSE);
 
-
+print("recall TRUTH:");
+print(truth);
