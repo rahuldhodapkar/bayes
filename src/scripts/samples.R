@@ -13,10 +13,8 @@
 nSamples <- 5000;
 nBins <- 100;
 
-
-
 vals = rnorm(nSamples, mean=50, sd=10);
-# vals = rbinom(nSamples, size=40, prob=0.2);
+# vals = rbinom(nSamples, size=10, prob=0.2);
 
 vals = floor(vals);
 vals = vals[vals > 0];
