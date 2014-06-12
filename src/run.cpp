@@ -4,6 +4,15 @@
 #include <string>
 #include <iostream>
 
+/* ==== run.cpp ====
+ * Implementation for the Run class defined in run.h.  Handles the
+ * data structures used during histogram restructuring
+ *
+ * @author Rahul Dhodapkar
+ * @version 6.12.14
+ */
+
+
 Run::Run(int bucket, double freq, std::pair<double, double> bounds) {
     freqBounds.first = freqBounds.second = totalFreq = freq;
     rangeBounds.first = bounds.first;

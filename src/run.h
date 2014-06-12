@@ -5,6 +5,18 @@
 #include <utility>
 #include <string>
 
+/* ==== run.h ====
+ * class prototype for a "run", which holds a set of contiguous bins
+ * marked for merging by the self-tuning histogram, along with some
+ * pertinent metadata about those bins.  The merging and splitting code
+ * is also contained in the Run class. 
+ *
+ * @author Rahul Dhodapkar (krishnakid)
+ * @version 4.12.14
+ */
+
+
+
 typedef std::pair<double, double> Bounds;
 
 class Run {

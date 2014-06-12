@@ -34,7 +34,7 @@ bool DataStream::hasNextBlock()
 
 // loads the next block of statistical data into
 // the histogram pointer specified by "out"
-void DataStream::getNextBlock(RangeSummary* out)
+void DataStream::getNextBlock(RangeSummary& out)
 {
     assert(hasNextBlock() && "tried to access dead datastream");
 
@@ -44,9 +44,9 @@ void DataStream::getNextBlock(RangeSummary* out)
     std::getline(channel, sEnd, ',');
     std::getline(channel, sVal);
 
-    out->low = std::stod(sSt);
-    out->high = std::stod(sEnd);
-    out->nReturned = std::stod(sVal);
+    out.low = std::stod(sSt);
+    out.high = std::stod(sEnd);
+    out.nReturned = std::stod(sVal);
 }
 
 // implementation for pretty printing RangeSummary object class

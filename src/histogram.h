@@ -7,6 +7,9 @@
  * class prototype for a histogram.  Contains information about the 
  * buckets in a vector of unsigned longs, and contains information about
  * the ranges in a vector of int pairs.
+ *
+ * @author Rahul Dhodapkar (krishnakid)
+ * @version 6.12.14
  */
 
 // define BucketBound structure

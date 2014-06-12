@@ -31,7 +31,7 @@ class DataStream
         DataStream(std::string filename, int btSize=10);
         ~DataStream();
         bool hasNextBlock();
-        void getNextBlock(RangeSummary* out);
+        void getNextBlock(RangeSummary& out);
 };
 
 std::ostream& operator<<(std::ostream &strm, const RangeSummary &summ);
