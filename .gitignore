@@ -4,6 +4,9 @@
 # Built Input Files
 *.in
 
+# Built Output Files
+*.out
+
 # Text Editor artifacts
 *.swp
 *.swo
