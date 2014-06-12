@@ -5,10 +5,11 @@
 #include <list>
 #include <utility>
 #include <algorithm>
-
 #include <assert.h>
+#include <fstream>
 #include <stdlib.h>
 #include <stdio.h>
+
 #include "histogram.h"
 #include "datagen.h"
 #include "run.h"
@@ -38,43 +39,43 @@ void initHistogram()
 
 }
 // recalibrates histogram based on batch input
-void update (RangeSummary* data, Histogram* hist)
+void update (RangeSummary& data, Histogram& hist)
 {
     // estimate the result size of the selection using current data
     double est = 0;
-    bool doesIntersect [hist->nBuckets];
+    bool doesIntersect [hist.nBuckets];
     double dIntersect = 0;
 
-    for (int i = 0; i < hist->nBuckets; i++) {
-        double minIntersect = std::max(data->low, hist->bounds[i].low);
-        double maxIntersect = std::min(data->high, hist->bounds[i].high);
+    for (int i = 0; i < hist.nBuckets; i++) {
+        double minIntersect = std::max(data.low, hist.bounds[i].low);
+        double maxIntersect = std::min(data.high, hist.bounds[i].high);
         
         doesIntersect[i] = maxIntersect - minIntersect > 0 ||
-                             (minIntersect >= hist->bounds[i].low &&
-                             maxIntersect < hist->bounds[i].high);
+                             (minIntersect >= hist.bounds[i].low &&
+                             maxIntersect < hist.bounds[i].high);
 
         // bounds intervals are [low, high).
         
         if (doesIntersect[i]) {
-            est += hist->values[i];
-            dIntersect += hist->bounds[i].high - hist->bounds[i].low;
+            est += hist.values[i];
+            dIntersect += hist.bounds[i].high - hist.bounds[i].low;
         }
 
     }
     // compute absolute estimation error
-    double esterr = data->nReturned - est;              // error term
+    double esterr = data.nReturned - est;              // error term
 
     // distribute error amongst buckets in proportion to frequency
-    for (int i = 0; i < hist->nBuckets; i++) {     
+    for (int i = 0; i < hist.nBuckets; i++) {     
         double frac = 0;
         if(doesIntersect[i]) { 
-            frac = (hist->bounds[i].high - hist->bounds[i].low) /
+            frac = (hist.bounds[i].high - hist.bounds[i].low) /
                                         dIntersect;
         }
 
-        hist->values[i] = std::max(0.0, hist->values[i] + 
+        hist.values[i] = std::max(0.0, hist.values[i] + 
                                     frac * _alpha * esterr *
-                                    hist->values[i] / est);
+                                    hist.values[i] / est);
     }
 
 }
@@ -117,14 +118,7 @@ void restructure (Histogram& hist) {
             }
             curRun = i;
         }
-        
-        std::cout << "winner pair :: ";
-        best.first->printBuckets();
-        std::cout << " -> ";
-        best.second->printBuckets();
-        std::cout << std::endl;
 
-        std::cout << "runs size is " << runs.size() << std::endl;
         if (minDiff < _mergeThreshold * totalFreq) {
             best.first->merge(*(best.second));          // merge
             reclaimed.push_back(*(best.second));       // reclaim Run
@@ -153,11 +147,8 @@ void restructure (Histogram& hist) {
     for (RunIter i = runs.begin(); 
          candidates.size() <= nToSplit && i != runs.end(); i++) {
         candidates.push_front(*i);          // for reverse access later
-        runs.erase(i);                      // ***FLAG*** unsafe
+        runs.erase(i); 
     }
-    std::cout << "candiates size is " << candidates.size() << std::endl;
-    std::cout << "reclaimed size is " << reclaimed.size() << std::endl;
-    std::cout << "runs size is " << runs.size() << std::endl;
 
     double fullFreq = 0;
 
@@ -165,16 +156,13 @@ void restructure (Histogram& hist) {
         [&] (const Run& val) {
             fullFreq += val.getTotalFreq();
         });
-    std::cout << "fullFreq :" << fullFreq << std::endl;
 
-    // need to ensure that sum is 100.
-
+    // need to ensure that sum is full range
     int totalReclaimed = reclaimed.size();
     int candidatesProcessed = 0;
 
     for (RunIter i = candidates.begin(); i != candidates.end(); i++) {
         int nAlloc;
-        std::cout << "cFreq :" << i->getTotalFreq() << std::endl;
         if (candidatesProcessed < candidates.size() - 1) { 
             nAlloc = totalReclaimed * i->getTotalFreq() / fullFreq;
         } else { 
@@ -186,14 +174,12 @@ void restructure (Histogram& hist) {
             updateRuns.push_back(*(reclaimed.begin()));
             reclaimed.erase(reclaimed.begin());
         }
-
         i->split(updateRuns);           // merge step
 
         // merge back onto candidates
         runs.push_back(*i);
         runs.splice(runs.end(), updateRuns);
 
-        std::cout << nAlloc << " allocated" << std::endl;
         candidatesProcessed++;
     } 
 
@@ -206,70 +192,59 @@ void restructure (Histogram& hist) {
     // mappy map map
     int counter = 0;
     for (RunIter i = runs.begin(); i != runs.end(); i++) { 
-        std::cout << i->getTotalFreq() << std::endl;
         hist.values[counter] = i->getTotalFreq();
         hist.bounds[counter].low = i->getRangeBounds().first;
         hist.bounds[counter].high = i->getRangeBounds().second;
         counter++;
-    } 
-
-    std::cout << "runs size is " << runs.size() << std::endl;
+    }
 }
-
-
-
-
 
 // runs the predefined test script
 int main(int argc, char** argv) 
 {
-    Histogram truth (20);
-    int nValues = 100;
+    // define magic numbers
     int nSamples = 1500;
-    int binSize = 5;
-    int nBins = nValues / binSize;
+    int nBins = 40;
+    double lowVal = 0;
+    double highVal = 100;
+    int initVal = 10;           // initialization value
+    int restructureInterval = 100;
+    
+    std::ofstream out;
+    out.open ("../out/hist.out");
 
+    // calculate additional magic numbers
+    double stepSize = (highVal - lowVal) / nBins;
+
+    // build histogram
     Histogram ts (nBins); 
-    for(int i = 1; i <= nBins; i++) {
-        ts.values[i-1] = 5.5;
-        ts.bounds[i-1].low = (i-1)*binSize;
-        ts.bounds[i-1].high = i*binSize;
+ 
+    double curStart = lowVal;
+    for(int i = 0; i < nBins - 1; i++) {
+        ts.values[i] = initVal;
+        ts.bounds[i].low = curStart;
+        ts.bounds[i].high = curStart + stepSize;
+        curStart += stepSize;
     }
-    std::cout << "helloworld" << std::endl;
-    std::cout << "================================" << std::endl;
-    std::cout << ts << std::endl;
+    ts.values[nBins - 1] = initVal;    // ensure bounds fully covered.
+    ts.bounds[nBins - 1].low = curStart;
+    ts.bounds[nBins - 1].high = highVal;
 
-
-    std::cout << "================================" << std::endl;
-
+    // run tuning
     RangeSummary sum ;
     DataStream stream (std::string("../data/gen.in"));
     
     for (int i = 0; i < nSamples; i++) {  
         if(stream.hasNextBlock()) {
-            stream.getNextBlock(&sum);
+            stream.getNextBlock(sum);
         }       
-        update(&sum, &ts);
-        std::cout<< "=========== " << i << " ============" << std::endl;
-        std::cout << ts << std::endl;
-        if (true) {
+        update(sum, ts);
+        if (i % restructureInterval == restructureInterval - 1) {
             restructure(ts);
         }
-        std::cout<< "=========== " << i << " ============" << std::endl;
-        std::cout << ts << std::endl;
     }
+    out << ts;
     return 0;
 }
-
-
-
-
-
-
-
-
-
-
-
 
 
