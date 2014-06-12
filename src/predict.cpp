@@ -45,37 +45,48 @@ void update (RangeSummary& data, Histogram& hist)
     double est = 0;
     bool doesIntersect [hist.nBuckets];
     double dIntersect = 0;
+    double minIntersect, maxIntersect;
 
     for (int i = 0; i < hist.nBuckets; i++) {
-        double minIntersect = std::max(data.low, hist.bounds[i].low);
-        double maxIntersect = std::min(data.high, hist.bounds[i].high);
-        
-        doesIntersect[i] = maxIntersect - minIntersect > 0 ||
-                             (minIntersect >= hist.bounds[i].low &&
-                             maxIntersect < hist.bounds[i].high);
-
-        // bounds intervals are [low, high).
-        
-        if (doesIntersect[i]) {
-            est += hist.values[i];
-            dIntersect += hist.bounds[i].high - hist.bounds[i].low;
+        minIntersect = std::max(data.low, hist.bounds[i].low);
+        maxIntersect = std::min(data.high, hist.bounds[i].high);
+       
+        double intersectFrac = std::max((maxIntersect - minIntersect) /
+                     (hist.bounds[i].high - hist.bounds[i].low), 0.0);
+    
+        if (intersectFrac > 1) {
+            std::cout << "=========FAIL========" << std::endl;
         }
+        
+        doesIntersect[i] = intersectFrac > 0;
 
+        est += hist.values[i] * intersectFrac;
     }
+
+
     // compute absolute estimation error
     double esterr = data.nReturned - est;              // error term
+    
+    std::cout << est << " vs " << esterr << std::endl;
 
     // distribute error amongst buckets in proportion to frequency
     for (int i = 0; i < hist.nBuckets; i++) {     
-        double frac = 0;
-        if(doesIntersect[i]) { 
-            frac = (hist.bounds[i].high - hist.bounds[i].low) /
-                                        dIntersect;
+        minIntersect = std::max(data.low, hist.bounds[i].low);
+        maxIntersect = std::min(data.high, hist.bounds[i].high);
+        double frac = (maxIntersect - minIntersect + 1) /
+                      (hist.bounds[i].high - hist.bounds[i].low + 1);
+        
+        //std::cout << "correction term : " << 
+        //                            frac * _alpha * esterr *
+        //                            hist.values[i] / est << std::endl;
+        
+        // std::cout << hist.values[i] << " -> ";
+        if (doesIntersect[i]) {
+            hist.values[i] = std::max(0.0, hist.values[i] + 
+                                        (frac * _alpha * esterr *
+                                        hist.values[i] / est));
         }
-
-        hist.values[i] = std::max(0.0, hist.values[i] + 
-                                    frac * _alpha * esterr *
-                                    hist.values[i] / est);
+        // std::cout << hist.values[i] << std::endl;
     }
 
 }
@@ -96,14 +107,14 @@ void restructure (Histogram& hist) {
                  Bounds(hist.bounds[i].low, hist.bounds[i].high));
         runs.push_back(nr); 
     }
-
+    
     // for every two consercuive runs of buckets, find the maximum
     // difference in frequency between a bucket in the first run and
     // a bucket in the second run
     std::list<Run> reclaimed;
     bool mergeComplete = false;
 
-    while (!mergeComplete && reclaimed.size() + 1 < runs.size()) { 
+    while (!mergeComplete) { //  && reclaimed.size() + 1 < runs.size() 
         mergeComplete = true;
         MergePair best;
         double minDiff = std::numeric_limits<double>::infinity();
@@ -203,12 +214,12 @@ void restructure (Histogram& hist) {
 int main(int argc, char** argv) 
 {
     // define magic numbers
-    int nSamples = 1500;
-    int nBins = 40;
+    int nSamples = 10000;
+    int nBins = 45;
     double lowVal = 0;
     double highVal = 100;
-    int initVal = 10;           // initialization value
-    int restructureInterval = 100;
+    int initVal = 1000;           // initialization value
+    int restructureInterval = 1000;
     
     std::ofstream out;
     out.open ("../out/hist.out");
