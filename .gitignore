@@ -6,6 +6,7 @@
 
 # Built Output Files
 *.out
+*.truth
 
 # Text Editor artifacts
 *.swp
