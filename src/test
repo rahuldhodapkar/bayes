@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+Rscript scripts/samples.R
+
+make
+./predict
+Rscript scripts/visualize.R
+Rscript scripts/fitting.R
+
