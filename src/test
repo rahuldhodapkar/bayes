@@ -1,7 +1,11 @@
 #!/usr/bin/env bash
 
-Rscript scripts/samples.R
+# generate zipf distribution
+utils/zipf $1 100 10000 > ../data/zipf1.dist
+utils/zipf $1 100 10000 > ../data/zipf2.dist
 
+# run analysis
+Rscript scripts/samples.R
 make
 ./predict
 Rscript scripts/visualize.R
