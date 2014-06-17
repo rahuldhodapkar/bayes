@@ -38,7 +38,7 @@ class Run {
         bool isMerged () const;
         void split(std::list<Run>& run);
         void merge(Run& run);
-        double getMinDiff (Run& run);
+        double getMaxDiff (Run& run);
         std::list<int> getBuckets ();
 
         // debug functions

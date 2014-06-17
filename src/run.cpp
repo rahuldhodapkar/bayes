@@ -48,8 +48,8 @@ std::list<int> Run::getBuckets() {
 }
 
 // return minimum of maximum differences.
-double Run::getMinDiff (Run& run) {
-    return std::min(run.getHiFreq() - getLoFreq(),
+double Run::getMaxDiff (Run& run) {
+    return std::max(run.getHiFreq() - getLoFreq(),
                     getHiFreq() - run.getLoFreq());
 }
 
