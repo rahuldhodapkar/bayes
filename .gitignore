@@ -1,5 +1,6 @@
 # Compiled Binary
 /src/predict
+/src/utils/zipf
 
 # Built Input Files
 *.in
@@ -33,3 +34,9 @@
 *.exe
 *.out
 *.app
+
+# Folders
+data
+figures
+out
+
