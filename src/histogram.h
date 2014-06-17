@@ -38,7 +38,7 @@ class Histogram
         void update(RangeSummary&);
         void restructure();
         double getFreqOnRange(Bounds&);
-        Histogram(int size=10);
+        Histogram(int size, double binInit, double lowBound, double highBound);
         ~Histogram();
 };
 

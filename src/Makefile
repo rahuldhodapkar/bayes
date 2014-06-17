@@ -1,9 +1,9 @@
 CC = clang++
-CFLAGS = -std=c++11 -g
+CFLAGS = -g
 
 all : predict
 
-predict : predict.o histogram.o datagen.o run.o
+predict : predict.o histogram.o datagen.o bin_run.o
 	$(CC) $(CFLAGS) $^ -o predict
 
 predict.o : predict.cpp
@@ -15,5 +15,5 @@ histogram.o : histogram.cpp
 datagen.o : datagen.cpp
 	$(CC) $(CFLAGS) -c $^ -o datagen.o
 
-run.o : run.cpp
-	$(CC) $(CFLAGS) -c $^ -o run.o
+bin_run.o : bin_run.cpp
+	$(CC) $(CFLAGS) -c $^ -o bin_run.o

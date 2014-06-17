@@ -1,4 +1,4 @@
-#include "run.h"
+#include "bin_run.h"
 #include <list>
 #include <utility>
 #include <string>
@@ -85,12 +85,11 @@ void Run::split (std::list<Run>& runs) {
     setRangeBounds(Bounds(curStart, rangeBounds.second));
 }
 
-
-
 // merge two runs and store info in first run.
 void Run::merge (Run& run) { 
     // merge bucket ranges
-    buckets.splice(buckets.end(), run.getBuckets());    
+    std::list<int> exBuckets = run.getBuckets();
+    buckets.splice(buckets.end(), exBuckets);    
     totalFreq += run.getTotalFreq();
     freqBounds.first = std::min(getLoFreq(), run.getLoFreq());
     freqBounds.second = std::max(getHiFreq(), run.getHiFreq());
@@ -99,22 +98,6 @@ void Run::merge (Run& run) {
     rangeBounds.first = std::min(extBounds.first, rangeBounds.first);
     rangeBounds.second = std::max(extBounds.second, rangeBounds.second);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 void Run::printBuckets() {

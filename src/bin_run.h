@@ -40,7 +40,7 @@ class Run {
         void merge(Run& run);
         double getMaxDiff (Run& run);
         std::list<int> getBuckets ();
-
+        
         // debug functions
         void printBuckets();
 

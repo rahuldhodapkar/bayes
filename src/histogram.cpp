@@ -19,12 +19,26 @@ double _mergeThreshold = 0.00025;      // merge threshold parameter
 double _splitThreshold = 0.1;       // split threshold parameter
 
 // Histogram constructor
-Histogram::Histogram(int buckets)
+Histogram::Histogram(int size, double binInit, double lowBound, double highBound)
 {
-    nBuckets = buckets;
+    nBuckets = size;
     values = new double[nBuckets];    
     bounds = new Bounds[nBuckets];
     nObs = 0;
+    
+    // initialize
+    double curStart = lowBound;
+    double stepSize = (highBound - lowBound) / nBuckets; 
+
+    for (int i = 0; i < nBuckets - 1; i++) {
+        values[i] = binInit;
+        bounds[i].first = curStart;
+        bounds[i].second = curStart + stepSize;
+        curStart += stepSize;
+    }
+    values[nBuckets - 1] = binInit;
+    bounds[nBuckets - 1].first = curStart;
+    bounds[nBuckets - 1].second = highBound;
 }
 
 // Histogram destructor
@@ -152,7 +166,6 @@ void Histogram::restructure () {
         }
         // and repeat.
     }
-
     // split until appropriate
     //
     // if a < b then a will come before b in the listing
