@@ -2,6 +2,7 @@
 #define HISTOGRAM_H 1
 
 #include <iostream> 
+#include <utility>
 
 /* ==== histogram.h ====
  * class prototype for a histogram.  Contains information about the 
@@ -11,6 +12,8 @@
  * @author Rahul Dhodapkar (krishnakid)
  * @version 6.12.14
  */
+
+typedef std::pair<double,double> Bounds;
 
 // define BucketBound structure
 typedef struct {
@@ -23,9 +26,11 @@ class Histogram
 { 
     public:
         int nBuckets;
+        int nObs;                   // number of observations seen
         double* values;
         BucketBound* bounds;
 
+        double getFreqOnRange(Bounds&);
         Histogram(int size=10);
         ~Histogram();
 };
