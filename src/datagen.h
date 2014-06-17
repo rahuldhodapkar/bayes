@@ -14,14 +14,6 @@
  * @version 6.9.2014
  */
 
-
-class RangeSummary{
-    public:
-        double low;
-        double high;
-        double nReturned;
-};
-
 class DataStream 
 {
     std::ifstream channel;

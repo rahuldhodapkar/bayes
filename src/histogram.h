@@ -4,6 +4,8 @@
 #include <iostream> 
 #include <utility>
 
+#include "run.h"
+
 /* ==== histogram.h ====
  * class prototype for a histogram.  Contains information about the 
  * buckets in a vector of unsigned longs, and contains information about
@@ -15,21 +17,26 @@
 
 typedef std::pair<double,double> Bounds;
 
-// define BucketBound structure
-typedef struct {
-    double low;
-    double high;
-} BucketBound;
+class RangeSummary{
+    public:
+        double low;
+        double high;
+        double nReturned;
+};
 
 // define Histogram class wrapper
 class Histogram 
-{ 
+{
+    static bool rangeBoundOrderingFunction(const Run&, const Run&);
+    static bool splitOrderingFunction(const Run&, const Run&);
     public:
         int nBuckets;
         int nObs;                   // number of observations seen
         double* values;
-        BucketBound* bounds;
+        Bounds* bounds;
 
+        void update(RangeSummary&);
+        void restructure();
         double getFreqOnRange(Bounds&);
         Histogram(int size=10);
         ~Histogram();
