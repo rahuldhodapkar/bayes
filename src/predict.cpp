@@ -25,22 +25,43 @@
 
 // histogram to be stored as globals for exploration
 
-
 double _alpha = 0.5;                // universal damping term
 
 double _mergeThreshold = 0.00025;      // merge threshold parameter
 
 double _splitThreshold = 0.1;       // split threshold parameter
 
-// allocates memory for and initializes global histogram
-void initHistogram() 
-{
-    
+double _nSamples = 2000;            // number of samples to parse in each workload
 
+// allocates memory for and initializes global histogram
+double predict(std::string inFile, Histogram& hist)  
+{
+    RangeSummary sum ;
+    DataStream stream (inFile);
+
+    double totErr = 0;
+    int nUsed = 0;
+    for (int i = 0; i < _nSamples; i++) {  
+        if(stream.hasNextBlock()) {
+            stream.getNextBlock(sum);
+        }       
+        Bounds queryBounds (sum.low, sum.high);
+        double temp = hist.getFreqOnRange(queryBounds);
+        if (sum.nReturned > 0) {
+            double error = std::abs(temp - sum.nReturned)/sum.nReturned;
+            nUsed++;
+            totErr += error;
+        }
+    }
+    double avgErr = totErr / nUsed;
+    return avgErr;
 }
+
 // recalibrates histogram based on batch input
 void update (RangeSummary& data, Histogram& hist)
 {
+    hist.nObs++;
+
     // estimate the result size of the selection using current data
     double est = 0;
     bool doesIntersect [hist.nBuckets];
@@ -73,7 +94,7 @@ void update (RangeSummary& data, Histogram& hist)
         if (doesIntersect[i]) {
             hist.values[i] = std::max(0.0, hist.values[i] + 
                                         (frac * _alpha * esterr *
-                                        hist.values[i] / est));
+                                        hist.values[i] /(est)));
         }
     }
 
@@ -108,17 +129,30 @@ void restructure (Histogram& hist) {
         double minDiff = std::numeric_limits<double>::infinity();
         RunIter i = runs.begin();
         RunIter curRun = i;
+        
+        int nUnmerged = 0;
+
         for (i++; i != runs.end(); i++) {
-            double cDiff = curRun->getMinDiff(*i); 
+            double cDiff = curRun->getMaxDiff(*i); 
+           
             if (cDiff < minDiff) { 
                 best.first = curRun;
                 best.second = i;
                 minDiff = cDiff;
             }
+
+            if (!(curRun->isMerged())) {
+                nUnmerged++;
+            }
+
             curRun = i;
         }
 
-        if (minDiff < _mergeThreshold * totalFreq) {
+        if (nUnmerged <= reclaimed.size()) {
+            break;                                   // otherwise merged buckets will be split
+        }
+
+        if (minDiff < (_mergeThreshold * totalFreq)) {
             best.first->merge(*(best.second));          // merge
             reclaimed.push_back(*(best.second));       // reclaim Run
             runs.erase(best.second);
@@ -128,13 +162,16 @@ void restructure (Histogram& hist) {
     }
 
     // split until appropriate
+    //
+    // if a < b then a will come before b in the listing
+    //
     runs.sort([] (const Run& run1, const Run& run2) {
         if (run1.isMerged() && run2.isMerged()) {
             return run1.getTotalFreq() > run2.getTotalFreq();
         } else if (run1.isMerged()) {
-            return true;
-        } else if (run2.isMerged()) {
             return false;
+        } else if (run2.isMerged()) {
+            return true;
         } else {
             return run1.getTotalFreq() > run2.getTotalFreq();
         }
@@ -144,9 +181,11 @@ void restructure (Histogram& hist) {
 
     std::list<Run> candidates;
     for (RunIter i = runs.begin(); 
-         candidates.size() <= nToSplit && i != runs.end(); i++) {
+        candidates.size() <= nToSplit && i != runs.end(); i++) {
         candidates.push_front(*i);          // for reverse access later
-        runs.erase(i); 
+
+        i = runs.erase(i);
+        i--;
     }
 
     double fullFreq = 0;
@@ -201,12 +240,14 @@ void restructure (Histogram& hist) {
 // runs the predefined test script
 int main(int argc, char** argv) 
 {
+    time_t starttime, endtime;
+    time(&starttime);
     // define magic numbers
-    int nSamples = 10000;
-    int nBins = 50;
+    int nSamples = _nSamples;
+    int nBins = 20;
     double lowVal = 0;
     double highVal = 100;
-    int initVal = 1000;           // initialization value
+    int initVal = 10;           // initialization value
     int restructureInterval = 200;
     
     std::ofstream out;
@@ -235,7 +276,8 @@ int main(int argc, char** argv)
     // run tuning
     RangeSummary sum ;
     DataStream stream (std::string("../data/gen.in"));
-    
+   
+    // main update/restructuring code
     for (int i = 0; i < nSamples; i++) {  
         if(stream.hasNextBlock()) {
             stream.getNextBlock(sum);
@@ -244,7 +286,8 @@ int main(int argc, char** argv)
         if (i % restructureInterval == restructureInterval - 1) {
             restructure(ts);
         }
-        timeseries << ts;
+         
+        timeseries << i <<","<<predict(std::string("../data/test.in"), ts) << std::endl;
     }
     out << ts;
     return 0;
