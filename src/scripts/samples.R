@@ -10,39 +10,82 @@
 # build a ground truth histogram
 
 nSamples <- 10000;
+nQueries <- 2000;
 low <- 0;
 high <- 100;
 
-# vals = rnorm(nSamples, mean=50, sd=20);        # normal
+genQueries <- function(vals) {
+    lbnd <- runif(nQueries, min=low, max=high);
+    rbnd <- runif(nQueries, min=low, max=high);
+
+    dir <- sample(c(TRUE, FALSE), nQueries, replace=TRUE);
+
+    ranges <- matrix(, nQueries, 3);
+
+    for (i in 1:nQueries) {
+        if (TRUE) { 
+            ranges[i,1] = min(lbnd[i], rbnd[i]);
+            ranges[i,2] = max(lbnd[i], rbnd[i]);
+        } else if (dir[i]) {               # forward direction
+            if(rbnd[i] < lbnd[i]) {
+                ranges[i,1] = low;
+                ranges[i,2] = lbnd[i];
+            } else {
+                ranges[i,1] = lbnd[i];
+                ranges[i,2] = rbnd[i];
+            }
+        } else { 
+            if(lbnd[i] > rbnd[i]) {
+                ranges[i,1] = rbnd[i];
+                ranges[i,2] = high;
+            } else {
+                ranges[i,1] = lbnd[i];
+                ranges[i,2] = rbnd[i];
+            }
+        }
+
+        ranges[i,3] <- length(vals[vals > ranges[i,1] & vals < ranges[i,2]]);
+    }
+    return(ranges);
+}
+
+
+# trainVals = rnorm(nSamples, mean=50, sd=20);        # normal
+# testVals = rnorm(nSamples, mean=50, sd=20);        # normal
+
+trainVals = read.csv("../data/zipf1.dist", header=FALSE);
+testVals = read.csv("../data/zipf2.dist", header=FALSE);
+
+trainVals = trainVals[,1];
+testVals = testVals[,1];
+
+warnings();
+
 # vals = rcauchy(nSamples, location = 50, scale=9);     # cauchy
 
-# vals = rbinom(nSamples, size=25, prob=0.2);    # binomial
+# trainVals = rbinom(nSamples, size=65, prob=0.5);    # binomial
+# testVals = rbinom(nSamples, size=65, prob=0.5);    # binomial
 
 # vals = sample(c(40, 40, 40), nSamples,
 #                         replace=TRUE);
 
-vals = sample(c(40, 40, 40, 24, 24, 24, 66.3, 66.3), nSamples,
-                         replace=TRUE);
+# vals = sample(c(40, 40, 40, 24, 24, 24, 66.3, 66.3), nSamples,
+#                         replace=TRUE);
 
 #vals = sample(c(40, 40, 40, 24, 24, 24, 66.3, 66.3, 90, 15), nSamples,
 #                        replace=TRUE);
+trainRanges = genQueries(trainVals);
+testRanges = genQueries(testVals);
 
-
-lbnd <- runif(nSamples, min=low, max=high);
-rbnd <- runif(nSamples, min=low, max=high);
-
-ranges <- matrix(, nSamples, 3);
-
-for (i in 1:nSamples) {
-    ranges[i,1] <- min(lbnd[i], rbnd[i]);    
-    ranges[i,2] <- max(lbnd[i], rbnd[i]);    
-
-    ranges[i,3] <- length(vals[vals > ranges[i,1] & vals < ranges[i,2]]);
-}
-
-write.table(ranges, "../data/gen.in", sep=",", 
+write.table(trainRanges, "../data/gen.in", sep=",", 
             row.names=FALSE, col.names=FALSE);
 
-write.table(vals, "../data/gen.truth", sep=",",
+write.table(trainVals, "../data/gen.truth", sep=",",
+            row.names=FALSE, col.names=FALSE);
+
+write.table(testRanges, "../data/test.in", sep=",",
+            row.names=FALSE, col.names=FALSE);
+
+write.table(testRanges, "../data/test.truth", sep=",",
             row.names=FALSE, col.names=FALSE);
 
